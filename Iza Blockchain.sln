@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32104.313
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IzaBlockchain", "IzaBlockchain\IzaBlockchain.csproj", "{2F63D3C7-0217-4378-B482-D0DA0297A3FC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IzaBlockchainTesting", "IzaBlockchainTesting\IzaBlockchainTesting.csproj", "{BD32C463-B532-49D8-BA64-376B504A2BDD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2F63D3C7-0217-4378-B482-D0DA0297A3FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F63D3C7-0217-4378-B482-D0DA0297A3FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F63D3C7-0217-4378-B482-D0DA0297A3FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F63D3C7-0217-4378-B482-D0DA0297A3FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD32C463-B532-49D8-BA64-376B504A2BDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD32C463-B532-49D8-BA64-376B504A2BDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD32C463-B532-49D8-BA64-376B504A2BDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD32C463-B532-49D8-BA64-376B504A2BDD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1049227D-C06A-4631-9682-8D8FA14D511A}
+	EndGlobalSection
+EndGlobal
