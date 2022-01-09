@@ -19,5 +19,21 @@
             for (int i = 0; i < BlockchainGenerals.AddressSize; i++)
                 data[i] = span_data[i];
         }
+
+        public bool IsEqual(Address other)
+        {
+            for(int i = 0; i < BlockchainGenerals.AddressSize; i++)
+            {
+                if (data[i] != other.data[i])
+                    return false;
+            }
+            return true;
+        }
+
+        public override string ToString()
+        {
+            fixed (byte* ptr = data)
+                return Convert.ToHexString(new ReadOnlySpan<byte>(ptr, BlockchainGenerals.AddressSize));
+        }
     }
 }
