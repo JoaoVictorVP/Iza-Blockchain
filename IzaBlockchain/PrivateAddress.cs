@@ -35,5 +35,6 @@
             fixed (byte* ptr = data)
                 return Convert.ToHexString(new ReadOnlySpan<byte>(ptr, BlockchainGenerals.PrivateAddressSize));
         }
+        public static PrivateAddress FromString(string hexAddress) => new PrivateAddress(Convert.FromHexString(hexAddress));
     }
 }

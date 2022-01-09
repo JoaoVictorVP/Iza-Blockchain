@@ -19,5 +19,22 @@
             for (int i = 0; i < BlockchainGenerals.SignatureSize; i++)
                 data[i] = span_data[i];
         }
+
+        public bool IsEqual(Signature other)
+        {
+            for(int i = 0; i < BlockchainGenerals.SignatureSize; i++)
+            {
+                if (data[i] != other.data[i])
+                    return false;
+            }
+            return true;
+        }
+
+        public override string ToString()
+        {
+            fixed (byte* ptr = data)
+                return Convert.ToHexString(new ReadOnlySpan<byte>(ptr, BlockchainGenerals.SignatureSize));
+        }
+        public static Signature FromString(string hexStr) => new Signature(Convert.FromHexString(hexStr));
     }
 }
