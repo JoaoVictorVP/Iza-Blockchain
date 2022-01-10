@@ -23,5 +23,13 @@ namespace IzaBlockchain
 
             return default;
         }
+
+        public static unsafe bool CompareBytes(byte* a, byte* b, int size)
+        {
+            for (int i = 0; i < size; i++)
+                if (a[i] != b[i])
+                    return false;
+            return true;
+        }
     }
 }

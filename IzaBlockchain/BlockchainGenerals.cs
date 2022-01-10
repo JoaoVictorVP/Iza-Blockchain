@@ -7,5 +7,7 @@
         public const int AddressSize = 32;
         public const int PrivateAddressSize = 32;
         public const int SignatureSize = 64;
+        
+        public const int BlockHashSize = 64;
     }
 }
