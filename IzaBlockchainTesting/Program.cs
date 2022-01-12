@@ -25,6 +25,8 @@ Console.WriteLine("Block: " + block.ToString());
 Console.WriteLine("Block2: " + block2.ToString());
 Console.WriteLine("Block3: " + block3.ToString());
 
+
+
 while(true)
 {
     Console.WriteLine("Type your message to sign:");
