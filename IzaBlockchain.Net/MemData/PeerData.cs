@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace IzaBlockchain.MemDatas;
-public class PeerData
+public class PeerData : MemData
 {
 
 }

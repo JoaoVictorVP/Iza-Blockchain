@@ -9,11 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-    <PackageReference Include="LiteDB" Version="5.0.11" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MemDatas\" />
+    <ProjectReference Include="..\IzaBlockchain\IzaBlockchain.csproj" />
   </ItemGroup>
 
 </Project>
