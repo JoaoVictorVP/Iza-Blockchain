@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IzaBlockchain.Net\IzaBlockchain.Net.csproj" />
     <ProjectReference Include="..\IzaBlockchain\IzaBlockchain.csproj" />
     <ProjectReference Include="..\ZeroKnowledgeNipah\ZeroKnowledgeNipah.csproj" />
   </ItemGroup>

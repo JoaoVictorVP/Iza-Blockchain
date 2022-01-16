@@ -1,4 +1,5 @@
 ﻿using IzaBlockchain;
+using IzaBlockchain.Net;
 using System.Numerics;
 using System.Text;
 using ZeroKnowledgeNipah;
@@ -27,7 +28,6 @@ Console.WriteLine("Block: " + block.ToString());
 Console.WriteLine("Block2: " + block2.ToString());
 Console.WriteLine("Block3: " + block3.ToString());
 
-BenchmarkDotNet.Running.BenchmarkRunner.Run<ZKNipah_Benchmark>();
 var sign = ZKNipah.SecondSign(wallet.SignArbitrary(new Span<byte> (new byte[] { 0, 0, 0 })), ref publicAddress);
 
 var third = ZKNipah.ThirdSign(ref sign, ref wallet, new TimeStamp(new DateTime(3, 3, 3, 3, 3, 3, 3)));
@@ -37,7 +37,7 @@ var mask = ZKNipah.GetMask(wallet, new TimeStamp(new DateTime(3, 3, 3, 3, 3, 3, 
 var verifyThird = ZKNipah.ThirdSignExternal(ref sign, ref mask);
 
 Console.WriteLine($"Provided: {third}\nVerifying: {verifyThird}\nIs Equal: {verifyThird.IsEqual(third)}");
-
+ClientUtils.GetSelfIP();
 while (true)
 {
     Console.WriteLine("Type your message to sign:");

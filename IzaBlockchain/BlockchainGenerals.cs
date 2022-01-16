@@ -9,5 +9,10 @@
         public const int SignatureSize = 64;
         
         public const int BlockHashSize = 64;
+
+        /// <summary>
+        /// Main connection port to network, starts with 30000 and can go through until 30500
+        /// </summary>
+        public const int ConnectionPort = 30001;
     }
 }
