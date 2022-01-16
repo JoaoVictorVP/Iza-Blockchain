@@ -38,6 +38,17 @@ var verifyThird = ZKNipah.ThirdSignExternal(ref sign, ref mask);
 
 Console.WriteLine($"Provided: {third}\nVerifying: {verifyThird}\nIs Equal: {verifyThird.IsEqual(third)}");
 ClientUtils.GetSelfIP();
+
+string privAddr = wallet.ToString();
+PrivateAddress fromStr = PrivateAddress.FromString(privAddr);
+Console.WriteLine("FromString: " + wallet.IsEqual(fromStr));
+
+Wallet walletObj = new Wallet(wallet);
+string json = Wallet.Serialize(walletObj, "Testing");
+walletObj = Wallet.Deserialize(json, "Testing");
+
+Console.WriteLine($"Deserialized wallet equals to owned: {wallet.IsEqual(walletObj.PrivateAddress)}");
+
 while (true)
 {
     Console.WriteLine("Type your message to sign:");
