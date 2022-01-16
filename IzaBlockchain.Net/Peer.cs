@@ -4,13 +4,13 @@ namespace IzaBlockchain.Net;
 
 public struct Peer
 {
-    public string publicAddress;
+    //public string publicAddress;
     /// <summary>
     /// The four bytes of IP
     /// </summary>
     public byte A, B, C, D;
 
-    public Address GetPublicAddress() => Address.FromString(publicAddress);
+    //public Address GetPublicAddress() => Address.FromString(publicAddress);
 
     public unsafe IPAddress GetIP()
     {

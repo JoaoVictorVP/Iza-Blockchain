@@ -6,7 +6,7 @@ namespace IzaBlockchain
     public static class Utils
     {
         static int privateAddressCount;
-        public static unsafe PrivateAddress CreateWallet(SeedPhrase seed)
+        public static unsafe PrivateAddress CreatePrivateKey(SeedPhrase seed)
         {
             var hashing = new HMACSHA256(new Span<byte>(seed.seed, BlockchainGenerals.PrivateAddressSize).ToArray());
 

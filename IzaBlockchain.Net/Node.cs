@@ -1,10 +1,38 @@
-﻿using System.Net.Sockets;
+﻿using Newtonsoft.Json;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 
 namespace IzaBlockchain.Net;
 
 public class Node
 {
+    public static Node Self => self;
+
+    public Wallet CurrentWallet;
+
+    public void CurrentWallet_CreateNew(string seedPhrase)
+    {
+        var seed = SeedPhrase.CreateSeed(seedPhrase);
+        var privAddr = Utils.CreatePrivateKey(seed);
+        CurrentWallet = new Wallet(privAddr);
+    }
+
+    public void CurrentWallet_SaveToFile(string path)
+    {
+        string json = JsonConvert.SerializeObject(CurrentWallet);
+
+        File.WriteAllText(path, json);
+    }
+
+    public void CurrentWallet_LoadFromFile(string path)
+    {
+        string json = File.ReadAllText(path);
+
+        CurrentWallet = JsonConvert.DeserializeObject<Wallet>(json);
+    }
+
+
+    static Node self;
     //static readonly List<PeerDataProcessor> peerProcessors = new(32);
     static readonly Dictionary<byte, PeerDataProcessor> peerProcessors = new(32);
 
@@ -18,6 +46,8 @@ public class Node
     List<PeerConnection> connections = new List<PeerConnection>(32);
 
     public PeerConnection GetRandomConnectedPeer() => connections[random.Next(0, connections.Count)];
+
+    public IEnumerable<PeerConnection> AllPeers() => connections;
 
     public void Connect(Peer peer)
     {
@@ -56,7 +86,7 @@ public class Node
                 }
                 catch(Exception exc)
                 {
-                    NetworkFeedback.SendFeedback($"Peer ({peer.Address}; {peer.Peer.GetIP()}) Error: " + exc.Message, NetworkFeedback.FeedbackType.Error);
+                    NetworkFeedback.SendFeedback($"Peer ({peer.Peer.GetIP()}) Error: " + exc.Message, NetworkFeedback.FeedbackType.Error);
                 }
             }
 
@@ -89,7 +119,7 @@ public class Node
         while(peer.Pending.Count > 0)
         {
             var pending = peer.Pending.Dequeue();
-            pending(peer.Address, peer.Client, stream);
+            pending(peer.Addresses, peer.Client, stream);
         }
     }
     void processRequestData(NetworkStream stream, int size)
@@ -108,6 +138,13 @@ public class Node
             if (result && processor.Exclusive)
                 break;
         }*/
+    }
+
+    public Node()
+    {
+        if (self != null)
+            throw new Exception("Only one Node can be run at once");
+        self = this;
     }
 }
 /// <summary>

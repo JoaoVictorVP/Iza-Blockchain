@@ -25,7 +25,7 @@ public class ZKNipah_Benchmark
     public unsafe void DoBenchmark()
     {
         SeedPhrase seed = SeedPhrase.CreateSeed("Izabele");
-        PrivateAddress wallet = Utils.CreateWallet(seed);
+        PrivateAddress wallet = Utils.CreatePrivateKey(seed);
         Address pAddress = wallet.GetPublicAddress();
 
         const string message = "Hello, World!";
@@ -45,7 +45,7 @@ public class ZKNipah_Benchmark
     public unsafe void SetupWallet()
     {
         SeedPhrase seed = SeedPhrase.CreateSeed("Izabele");
-        p_wallet = Utils.CreateWallet(seed);
+        p_wallet = Utils.CreatePrivateKey(seed);
         p_pAddress = p_wallet.GetPublicAddress();
 
         const string message = "Hello, World!";
@@ -61,7 +61,7 @@ public class ZKNipah_Benchmark
     public unsafe void BenchmarkWalletCreation()
     {
         SeedPhrase seed = SeedPhrase.CreateSeed("Izabele");
-        PrivateAddress wallet = Utils.CreateWallet(seed);
+        PrivateAddress wallet = Utils.CreatePrivateKey(seed);
     }
     [Benchmark]
     public unsafe void BenchmarkPublicAddressGeneration()

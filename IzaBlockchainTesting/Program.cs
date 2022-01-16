@@ -12,7 +12,7 @@ Console.WriteLine("Seed: " + seed);
 Console.WriteLine("Seed equals OtherA? " + seed.IsEqual(otherA));
 Console.WriteLine("Seed equals OtherB? " + seed.IsEqual(otherB));
 
-var wallet = Utils.CreateWallet(seed);
+var wallet = Utils.CreatePrivateKey(seed);
 var publicAddress = wallet.GetPublicAddress();
 
 var blockData = new byte[]
