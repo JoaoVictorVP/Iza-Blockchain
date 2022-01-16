@@ -27,5 +27,9 @@ namespace IzaBlockchain
         {
             db.Dispose();
         }
+        public MemData()
+        {
+            Initialize();
+        }
     }
 }

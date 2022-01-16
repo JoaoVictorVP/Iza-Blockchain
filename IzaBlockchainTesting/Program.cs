@@ -49,6 +49,10 @@ walletObj = Wallet.Deserialize(json, "Testing");
 
 Console.WriteLine($"Deserialized wallet equals to owned: {wallet.IsEqual(walletObj.PrivateAddress)}");
 
+Blockchain.Local.SetData("Name", "Michael");
+
+Console.WriteLine("Data got from LocalData: " + Blockchain.Local.GetData("Name"));
+
 while (true)
 {
     Console.WriteLine("Type your message to sign:");
