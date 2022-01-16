@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace IzaBlockchain.Net;
 
@@ -16,17 +18,58 @@ public class Node
         var privAddr = Utils.CreatePrivateKey(seed);
         CurrentWallet = new Wallet(privAddr);
     }
-
-    public void CurrentWallet_SaveToFile(string path)
+    /// <summary>
+    /// Size of cipher key in wallet encryption
+    /// </summary>
+    const int PasswordKeySize = 256;
+    public void CurrentWallet_SaveToFile(string path, string password = null)
     {
         string json = JsonConvert.SerializeObject(CurrentWallet);
+
+        if(password != null)
+        {
+            using var aes = Aes.Create();
+            aes.KeySize = PasswordKeySize;
+
+            Span<byte> passwordBytes = stackalloc byte[Encoding.UTF8.GetByteCount(password)];
+            Encoding.UTF8.GetBytes(password, passwordBytes);
+            var key = SHA256.HashData(passwordBytes);
+            aes.Key = key;
+
+            using (var mem = new MemoryStream())
+            using (var stream = new CryptoStream(mem, aes.CreateEncryptor(), CryptoStreamMode.Write))
+            {
+                var jsonBytes = Encoding.UTF8.GetBytes(json);
+                stream.Write(jsonBytes);
+                json = Convert.ToHexString(mem.ToArray());
+            }
+        }
 
         File.WriteAllText(path, json);
     }
 
-    public void CurrentWallet_LoadFromFile(string path)
+    public void CurrentWallet_LoadFromFile(string path, string password = null)
     {
         string json = File.ReadAllText(path);
+
+        if(password != null)
+        {
+            using var aes = Aes.Create();
+            aes.KeySize = PasswordKeySize;
+
+            Span<byte> passwordBytes = stackalloc byte[Encoding.UTF8.GetByteCount(password)];
+            Encoding.UTF8.GetBytes(password, passwordBytes);
+            var key = SHA256.HashData(passwordBytes);
+            aes.Key = key;
+
+            using (var mem = new MemoryStream(Convert.FromHexString(json)))
+            using (var stream = new CryptoStream(mem, aes.CreateDecryptor(), CryptoStreamMode.Read))
+            {
+                Span<byte> jsonBytes = stackalloc byte[(int)mem.Length];
+                stream.Read(jsonBytes);
+                json = Encoding.UTF8.GetString(jsonBytes);
+            }
+        }
 
         CurrentWallet = JsonConvert.DeserializeObject<Wallet>(json);
     }
