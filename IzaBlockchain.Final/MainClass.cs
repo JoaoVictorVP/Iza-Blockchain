@@ -25,6 +25,35 @@ public class MainClass
 
         // Syncs the blockchain
         Blockchain.Sync();
+
+#if DEBUG
+        NetworkFeedback.ListenFeedbacks(feedback =>
+        {
+            // Default, Console implementation of feedback listening
+
+            var original = Console.ForegroundColor;
+
+            var color = original;
+            switch(feedback.Type)
+            {
+                case NetworkFeedback.FeedbackType.Info:
+                    color = original;
+                    break;
+                case NetworkFeedback.FeedbackType.Warning:
+                    color = ConsoleColor.Yellow;
+                    break;
+                case NetworkFeedback.FeedbackType.Error:
+                    color = ConsoleColor.Red;
+                    break;
+            }
+
+            Console.ForegroundColor = color;
+
+            Console.WriteLine(feedback.Message);
+
+            Console.ForegroundColor = original;
+        });
+#endif
     }
     public static void Stop()
     {
