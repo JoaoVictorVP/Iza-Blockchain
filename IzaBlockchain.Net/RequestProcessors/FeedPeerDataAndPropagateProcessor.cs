@@ -19,6 +19,10 @@ public class FeedPeerDataAndPropagateProcessor : PeerRequestProcessor
         peer.C = receivedData[3];
         peer.D = receivedData[4];
 
+#if DEBUG
+        NetworkFeedback.SendFeedback($"FEEDING PEER DATA ({(removeOrAdd == 1? "Adding" : "Removing")})  WITH {peer}", NetworkFeedback.FeedbackType.Info);
+#endif
+
         if (removeOrAdd == 1)
         {
             if (!Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).AddPeer(peer))
@@ -47,6 +51,10 @@ public class FeedPeerDataAndPropagateProcessor : PeerRequestProcessor
                 stream.WriteByte(peer.B);
                 stream.WriteByte(peer.C);
                 stream.WriteByte(peer.D);
+
+#if DEBUG
+                NetworkFeedback.SendFeedback($"PROPAGATING PEER DATA TO: {cPeer.Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
             });
         }
 

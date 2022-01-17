@@ -14,6 +14,9 @@ public class SyncPeerDataProcessor : PeerRequestProcessor
         // It's receiving peers
         if(receivedData.Length > 0)
         {
+#if DEBUG
+            NetworkFeedback.SendFeedback("RECEIVING ALL PEER DATA", NetworkFeedback.FeedbackType.Info);
+#endif
             File.WriteAllBytes(Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).FullPath, receivedData.ToArray());
         }
         // Has to send peers
@@ -21,6 +24,9 @@ public class SyncPeerDataProcessor : PeerRequestProcessor
         {
             fromPeer.SendData((_peer, client, stream) =>
             {
+#if DEBUG
+                NetworkFeedback.SendFeedback("SENDING ALL PEER DATA", NetworkFeedback.FeedbackType.Info);
+#endif
                 stream.WriteByte((byte)CoreRequestTypes.SyncPeerData);
 
                 var peerData = File.ReadAllBytes(Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).FullPath);

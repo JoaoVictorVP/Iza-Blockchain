@@ -90,6 +90,10 @@ public class Node
             {
                 Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).AddPeer(peer);
 
+#if DEBUG
+                NetworkFeedback.SendFeedback($"SENDING NODE IP: FROM {peer} TO: {connection.Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
+
                 stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
 
                 // Add Code
@@ -110,8 +114,15 @@ public class Node
             connection.SendData((_peer, client, stream) =>
             {
                 stream.WriteByte((byte)CoreRequestTypes.SyncPeerData);
+
+#if DEBUG
+                NetworkFeedback.SendFeedback($"REQUESTING ALL PEER DATA (SYNC) FROM: {connection.Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
             });
         };
+#if DEBUG
+        NetworkFeedback.SendFeedback($"NODE CONNECTED, IP: {ClientUtils.GetSelfIP()}", NetworkFeedback.FeedbackType.Info);
+#endif
     }
     bool ended;
     public void Finish()
@@ -135,8 +146,15 @@ public class Node
                 stream.WriteByte(peer.B);
                 stream.WriteByte(peer.C);
                 stream.WriteByte(peer.D);
+
+#if DEBUG
+                NetworkFeedback.SendFeedback($"REMOVING IP FROM {connection.Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
             });
         }
+#if DEBUG
+        NetworkFeedback.SendFeedback("NODE DISCONNECTED", NetworkFeedback.FeedbackType.Info);
+#endif
     }
     async void Run()
     {

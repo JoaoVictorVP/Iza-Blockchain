@@ -26,8 +26,13 @@ public class PeerConnection
 
     public void Connect()
     {
+
         var ip = Peer.GetIP();
         int port = Node.GetCurrentConnectionCount();
+
+#if DEBUG
+        NetworkFeedback.SendFeedback($"CONNECTING TO PEER: {ip}:{port} AT {TimeOnly.FromDateTime(DateTime.Now)}", NetworkFeedback.FeedbackType.Info);
+#endif
 
         Client = new TcpClient();
 
@@ -45,6 +50,10 @@ public class PeerConnection
     {
         Client.Dispose();
         Listener.Stop();
+
+#if DEBUG
+        NetworkFeedback.SendFeedback($"DISCONNECTED FROM {Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
     }
 
     void RetrieveAddresses()

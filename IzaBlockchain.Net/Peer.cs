@@ -30,4 +30,9 @@ public struct Peer
     }
 
     public bool IsEqual(Peer other) => A == other.A && B == other.B && C == other.C && D == other.D;
+
+    public override string ToString()
+    {
+        return $"{A}.{B}.{C}.{D}";
+    }
 }

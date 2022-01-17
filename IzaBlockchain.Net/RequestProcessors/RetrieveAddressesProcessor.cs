@@ -26,6 +26,9 @@ public class RetrieveAddressesProcessor : PeerRequestProcessor
             {
                 Span<byte> addressBytes = receivedData.Slice(i * BlockchainGenerals.AddressSize, BlockchainGenerals.AddressSize);
                 var address = new Address(addressBytes);
+#if DEBUG
+                NetworkFeedback.SendFeedback($"ADDRESS RETRIEVED {address}", NetworkFeedback.FeedbackType.Info);
+#endif
                 fromPeer.Addresses.Add(address);
             }
         }
@@ -61,6 +64,10 @@ public class RetrieveAddressesProcessor : PeerRequestProcessor
                 Span<byte> pack = new Span<byte>(packPtr, size);
                 stream.Write(pack);
                 NativeMemory.Free(packPtr);
+
+#if DEBUG
+                NetworkFeedback.SendFeedback($"SENDING ADDRESSES TO: {peer.Peer}", NetworkFeedback.FeedbackType.Info);
+#endif
             });
         }
 
