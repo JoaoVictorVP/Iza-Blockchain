@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using IzaBlockchain.MemDatas;
+using System.Net.Sockets;
 
 namespace IzaBlockchain.Net;
 
@@ -13,6 +14,11 @@ public class PeerConnection
     public TcpListener? Listener;
     public readonly Queue<SendPeerDataMethod> Pending = new Queue<SendPeerDataMethod>(32);
 
+    /// <summary>
+    /// Enqueue peer data sending<br/>
+    /// Format: (PeerConnection peer, TcpClient client, NetworkStream stream) <see cref="SendPeerDataMethod"/>
+    /// </summary>
+    /// <param name="sendPeerData"></param>
     public void SendData(SendPeerDataMethod sendPeerData)
     {
         Pending.Enqueue(sendPeerData);
@@ -34,11 +40,46 @@ public class PeerConnection
         Node.IncreaseConnectionCount();
 
         RetrieveAddresses();
+
+        SendData((peer, client, stream) =>
+        {
+            Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer.Peer);
+
+            stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
+
+            // Add Code
+            stream.WriteByte(1);
+
+            stream.WriteByte(peer.Peer.A);
+            stream.WriteByte(peer.Peer.B);
+            stream.WriteByte(peer.Peer.C);
+            stream.WriteByte(peer.Peer.D);
+        });
+    }
+    public void Disconnect()
+    {
+        SendData((peer, client, stream) =>
+        {
+            Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer.Peer);
+
+            stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
+
+            // Remove Code
+            stream.WriteByte(0);
+
+            stream.WriteByte(peer.Peer.A);
+            stream.WriteByte(peer.Peer.B);
+            stream.WriteByte(peer.Peer.C);
+            stream.WriteByte(peer.Peer.D);
+        });
+
+        Client.Dispose();
+        Listener.Stop();
     }
 
     void RetrieveAddresses()
     {
-        Pending.Enqueue((addresses, client, stream) =>
+        Pending.Enqueue((peer, client, stream) =>
         {
             stream.WriteByte((byte)CoreRequestTypes.RetrieveAddresses);
         });
@@ -52,7 +93,7 @@ public class PeerConnection
         // Address = peer.GetPublicAddress();
     }
 }
-public delegate void SendPeerDataMethod(List<Address> addresses, TcpClient client, NetworkStream stream);
+public delegate void SendPeerDataMethod(PeerConnection peer, TcpClient client, NetworkStream stream);
 
 public abstract class PeerRequestProcessor
 {

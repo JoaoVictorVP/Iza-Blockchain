@@ -28,4 +28,6 @@ public struct Peer
         ip.TryWriteBytes(values, out _);
         return new Peer { A = values[0], B = values[1], C = values[2], D = values[3] };
     }
+
+    public bool IsEqual(Peer other) => A == other.A && B == other.B && C == other.C && D == other.D;
 }

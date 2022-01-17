@@ -14,7 +14,7 @@ public static class Blockchain
             memdatas.Add(name, memdata);
     }
     public static MemData GetMemData(string name) => memdatas[name];
-    public static MemData GetMemData<T>(string name) where T : MemData => memdatas[name] as T;
+    public static T GetMemData<T>(string name) where T : MemData => memdatas[name] as T;
 
     public static LocalData Local = new LocalData();
 

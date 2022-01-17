@@ -12,7 +12,7 @@ public class MainClass
     public static void Run()
     {
         // Implements peers recovery and writting on this blockchain *
-        Blockchain.AddMemData(FinalGenerals.PeerDataName, new PeerData());
+        Blockchain.AddMemData(BlockchainMemDataGenerals.PeerDataName, new PeerData());
 
         // Initialize blockchain
         Blockchain.Begin();

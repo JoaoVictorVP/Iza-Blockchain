@@ -62,8 +62,7 @@ public class Node
         {
             if(connection.Peer.GetHashCode() == peer.GetHashCode())
             {
-                connection?.Client?.Dispose();
-                connection?.Listener?.Stop();
+                connection.Disconnect();
                 connections.Remove(connection);
 
                 return true;
@@ -121,7 +120,7 @@ public class Node
         while(peer.Pending.Count > 0)
         {
             var pending = peer.Pending.Dequeue();
-            pending(peer.Addresses, peer.Client, stream);
+            pending(peer, peer.Client, stream);
         }
     }
     void processRequestData(NetworkStream stream, int size, PeerConnection connection, TcpClient client)
