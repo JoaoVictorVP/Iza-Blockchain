@@ -14,6 +14,7 @@ public static class Blockchain
             memdatas.Add(name, memdata);
     }
     public static MemData GetMemData(string name) => memdatas[name];
+    public static MemData GetMemData<T>(string name) where T : MemData => memdatas[name] as T;
 
     public static LocalData Local = new LocalData();
 
@@ -48,6 +49,9 @@ public class LocalData : MemData
             data.Insert(new Data(key, jsonValue));
         data.EnsureIndex(dat => dat.Key, true);
     }
+
+
+
     public T GetData<T>(string key)
     {
         var dat = db.GetCollection<Data>(CollectionName);

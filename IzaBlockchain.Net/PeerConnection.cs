@@ -59,7 +59,7 @@ public abstract class PeerRequestProcessor
     public abstract string Name { get; }
     public abstract byte RequestType { get; }
 
-    public abstract bool Process(Span<byte> receivedData);
+    public abstract bool Process(Span<byte> receivedData, PeerConnection fromPeer, TcpClient fromClient);
 
     public virtual void Initialize()
     {

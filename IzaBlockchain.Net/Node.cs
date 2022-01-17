@@ -109,7 +109,7 @@ public class Node
 
                 int size = request.Available;
                 var reqStream = request.GetStream();
-                processRequestData(reqStream, size);
+                processRequestData(reqStream, size, peer, request);
             }
 
             if (listener.Pending())
@@ -124,14 +124,14 @@ public class Node
             pending(peer.Addresses, peer.Client, stream);
         }
     }
-    void processRequestData(NetworkStream stream, int size)
+    void processRequestData(NetworkStream stream, int size, PeerConnection connection, TcpClient client)
     {
         Span<byte> buffer = stackalloc byte[size - /* request type */ 1];
         byte requestType = (byte)stream.ReadByte();
         stream.Read(buffer);
 
         if (peerProcessors.TryGetValue(requestType, out var processor))
-            processor.Processor(buffer);
+            processor.Processor(buffer, connection, client);
         else
             throw new Exception($"Cannot find request processor of type {requestType}: Your version is probably different from of that peer");
 /*        foreach(var processor in peerProcessors)
@@ -156,4 +156,4 @@ public class Node
 /// <param name="Processor">The processor method to process incoming data from peers</param>
 /// <param name="Type">The request type of this processor (a processor can only have one and there are only <see cref="NetworkGenerals.MaxRequestTypes"/> request types disponible to be claimed)</param>
 public readonly record struct PeerDataProcessor(string Id, ProcessPeerDataMethod Processor, byte Type);
-public delegate bool ProcessPeerDataMethod(Span<byte> receivedData);
+public delegate bool ProcessPeerDataMethod(Span<byte> receivedData, PeerConnection fromPeer, TcpClient fromClient);
