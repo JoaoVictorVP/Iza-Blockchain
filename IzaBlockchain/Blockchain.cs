@@ -44,13 +44,20 @@ public class LocalData : MemData
         string jsonValue = JsonConvert.SerializeObject(value);
         var data = db.GetCollection<Data>(CollectionName);
         if (data.Exists(dat => dat.Key == key))
-            data.Update(new Data(key, jsonValue));
+            data.Update(key, new Data(key, jsonValue));
         else
             data.Insert(new Data(key, jsonValue));
         data.EnsureIndex(dat => dat.Key, true);
     }
 
+    public string GetRawData(string key)
+    {
+        var dat = db.GetCollection<Data>(CollectionName);
 
+        string jsonValue = dat.FindOne(dat => dat.Key == key).Value;
+
+        return jsonValue;
+    }
 
     public T GetData<T>(string key)
     {
