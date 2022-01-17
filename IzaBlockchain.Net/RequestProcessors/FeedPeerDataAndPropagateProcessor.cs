@@ -36,17 +36,17 @@ public class FeedPeerDataAndPropagateProcessor : PeerRequestProcessor
         foreach(var cPeer in Node.Self.AllPeers())
         {
             // Propagate this process into connected peers
-            cPeer.SendData((peer, client, stream) =>
+            cPeer.SendData((_peer, client, stream) =>
             {
                 stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
 
                 // Remove Code
                 stream.WriteByte(0);
 
-                stream.WriteByte(peer.Peer.A);
-                stream.WriteByte(peer.Peer.B);
-                stream.WriteByte(peer.Peer.C);
-                stream.WriteByte(peer.Peer.D);
+                stream.WriteByte(peer.A);
+                stream.WriteByte(peer.B);
+                stream.WriteByte(peer.C);
+                stream.WriteByte(peer.D);
             });
         }
 

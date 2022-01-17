@@ -9,6 +9,8 @@ namespace IzaBlockchain
         /// </summary>
         public virtual string RelativePath => "MemData/Data";
 
+        public string FullPath => Blockchain.GetPath(RelativePath);
+
         protected LiteDatabase db;
 
         public virtual void Initialize()
@@ -17,7 +19,7 @@ namespace IzaBlockchain
         }
         protected void InitializeDB()
         {
-            db = new LiteDatabase(Blockchain.GetPath(RelativePath));
+            db = new LiteDatabase(FullPath);
         }
         public virtual void End()
         {

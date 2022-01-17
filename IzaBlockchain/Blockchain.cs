@@ -19,11 +19,34 @@ public static class Blockchain
     public static LocalData Local = new LocalData();
 
     /// <summary>
+    /// Triggered when blockchain is syncing
+    /// </summary>
+    public static event BlockchainSyncEvent OnSync;
+
+    static bool toBeSync;
+    static TimeSpan timeOff;
+    /// <summary>
+    /// Syncs the blockchain (and every other component connected to it) with the network
+    /// </summary>
+    public static void Sync()
+    {
+        if (!toBeSync)
+            return;
+
+        OnSync?.Invoke(timeOff);
+
+        toBeSync = false;
+    }
+
+    /// <summary>
     /// Initialize and begin blockchain (load files and etc...)
     /// </summary>
     public static void Begin()
     {
-        
+        var lastSync = Local.GetData<DateTime>("LastSync");
+        timeOff = DateTime.UtcNow - lastSync;
+        if ((DateTime.UtcNow - lastSync).Days >= 1)
+            toBeSync = true;
     }
 
     /// <summary>
@@ -31,7 +54,8 @@ public static class Blockchain
     /// </summary>
     public static void End()
     {
-
+        // Set's last time synced with the network
+        Local.SetData("LastSync", DateTime.UtcNow);
     }
 }
 public class LocalData : MemData
@@ -78,3 +102,4 @@ public class LocalData : MemData
 
     record struct Data(string Key, string Value);
 }
+public delegate void BlockchainSyncEvent(TimeSpan timeOff);

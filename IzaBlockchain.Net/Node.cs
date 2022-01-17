@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using IzaBlockchain.MemDatas;
+using IzaBlockchain.Net.RequestProcessors;
+using Newtonsoft.Json;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -73,7 +75,68 @@ public class Node
     readonly Random random = new Random();
     public void Initialize()
     {
+        // Add's all the core request processors (in future source generators should be used to make things easier)
+        _ = new FeedPeerDataAndPropagateProcessor(); // 0
+        _ = new SyncPeerDataProcessor(); // 1
+        _ = new RetrieveAddressesProcessor(); // 2
+
         Task.Run(Run);
+
+        // Send node IP for all connected peers and propagate though network
+        var peer = Peer.From(ClientUtils.GetSelfIP());
+        foreach(var connection in connections)
+        {
+            connection.SendData((_peer, client, stream) =>
+            {
+                Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).AddPeer(peer);
+
+                stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
+
+                // Add Code
+                stream.WriteByte(1);
+
+                stream.WriteByte(peer.A);
+                stream.WriteByte(peer.B);
+                stream.WriteByte(peer.C);
+                stream.WriteByte(peer.D);
+            });
+        }
+
+        // Add's syncing for the node necessities (not blockchain itself it should be done on other class)
+        Blockchain.OnSync += timeOff =>
+        {
+            // Sync's with the peer data
+            var connection = GetRandomConnectedPeer();
+            connection.SendData((_peer, client, stream) =>
+            {
+                stream.WriteByte((byte)CoreRequestTypes.SyncPeerData);
+            });
+        };
+    }
+    bool ended;
+    public void Finish()
+    {
+        ended = true;
+
+        // Send node IP removal order for all connected peers and propagate though network
+        var peer = Peer.From(ClientUtils.GetSelfIP());
+        foreach (var connection in connections)
+        {
+            connection.SendData((_peer, client, stream) =>
+            {
+                Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer);
+
+                stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
+
+                // Remove Code
+                stream.WriteByte(0);
+
+                stream.WriteByte(peer.A);
+                stream.WriteByte(peer.B);
+                stream.WriteByte(peer.C);
+                stream.WriteByte(peer.D);
+            });
+        }
     }
     async void Run()
     {
@@ -92,6 +155,9 @@ public class Node
             }
 
             await Task.Delay(10);
+
+            if (ended)
+                return;
         }
     }
     async void RunPeer(PeerConnection peer)

@@ -40,39 +40,9 @@ public class PeerConnection
         Node.IncreaseConnectionCount();
 
         RetrieveAddresses();
-
-        SendData((peer, client, stream) =>
-        {
-            Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer.Peer);
-
-            stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
-
-            // Add Code
-            stream.WriteByte(1);
-
-            stream.WriteByte(peer.Peer.A);
-            stream.WriteByte(peer.Peer.B);
-            stream.WriteByte(peer.Peer.C);
-            stream.WriteByte(peer.Peer.D);
-        });
     }
     public void Disconnect()
     {
-        SendData((peer, client, stream) =>
-        {
-            Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer.Peer);
-
-            stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
-
-            // Remove Code
-            stream.WriteByte(0);
-
-            stream.WriteByte(peer.Peer.A);
-            stream.WriteByte(peer.Peer.B);
-            stream.WriteByte(peer.Peer.C);
-            stream.WriteByte(peer.Peer.D);
-        });
-
         Client.Dispose();
         Listener.Stop();
     }

@@ -1,4 +1,5 @@
 ﻿using IzaBlockchain.MemDatas;
+using IzaBlockchain.Net;
 
 namespace IzaBlockchain.Final;
 
@@ -9,6 +10,7 @@ namespace IzaBlockchain.Final;
 /// </summary>
 public class MainClass
 {
+    public static Node Node { get; private set; }
     public static void Run()
     {
         // Implements peers recovery and writting on this blockchain *
@@ -16,5 +18,20 @@ public class MainClass
 
         // Initialize blockchain
         Blockchain.Begin();
+
+        // Runs the node
+        Node = new Node();
+        Node.Initialize();
+
+        // Syncs the blockchain
+        Blockchain.Sync();
+    }
+    public static void Stop()
+    {
+        // Stops the blockchain
+        Blockchain.End();
+
+        // Finalize the node
+        Node.Finish();
     }
 }
