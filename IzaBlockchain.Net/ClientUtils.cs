@@ -16,4 +16,15 @@ public static class ClientUtils
             return selfIPCache = endPoint.Address;
         }
     }
+
+    public static unsafe Span<byte> AllocSpan(int size)
+    {
+        if (size < 1024)
+        {
+            byte* span = stackalloc byte[size];
+            return new Span<byte>(span, size);
+        }
+        else
+            return new NativeArray<byte>(size).SmartClean();
+    }
 }

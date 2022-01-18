@@ -1,6 +1,8 @@
 ﻿using IzaBlockchain.MemDatas;
 using IzaBlockchain.Net.RequestProcessors;
 using Newtonsoft.Json;
+using System.Drawing;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -84,9 +86,9 @@ public class Node
 
         // Send node IP for all connected peers and propagate though network
         var peer = Peer.From(ClientUtils.GetSelfIP());
-        foreach(var connection in connections)
+        foreach (var connection in connections)
         {
-            connection.SendData((_peer, client, stream) =>
+            connection.SendData((_peer) =>
             {
                 Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).AddPeer(peer);
 
@@ -94,15 +96,19 @@ public class Node
                 NetworkFeedback.SendFeedback($"SENDING NODE IP: FROM {peer} TO: {connection.Peer}", NetworkFeedback.FeedbackType.Info);
 #endif
 
-                stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
+                return new PeerSendDataBuilder(new SpanStream(6)
+                    // Type
+                    .WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate)
 
-                // Add Code
-                stream.WriteByte(1);
+                    // Code to add
+                    .WriteByte(1)
 
-                stream.WriteByte(peer.A);
-                stream.WriteByte(peer.B);
-                stream.WriteByte(peer.C);
-                stream.WriteByte(peer.D);
+                    // Peer
+                    .WriteByte(peer.A)
+                    .WriteByte(peer.B)
+                    .WriteByte(peer.C)
+                    .WriteByte(peer.D))
+                .AsData();
             });
         }
 
@@ -111,13 +117,22 @@ public class Node
         {
             // Sync's with the peer data
             var connection = GetRandomConnectedPeer();
-            connection.SendData((_peer, client, stream) =>
+            connection.SendData((_peer) =>
             {
-                stream.WriteByte((byte)CoreRequestTypes.SyncPeerData);
-
 #if DEBUG
                 NetworkFeedback.SendFeedback($"REQUESTING ALL PEER DATA (SYNC) FROM: {connection.Peer}", NetworkFeedback.FeedbackType.Info);
 #endif
+
+                return new PeerSendDataBuilder(new SpanStream(1)
+                    .WriteByte((byte)CoreRequestTypes.SyncPeerData))
+                .AsRequest()
+                .OnResponse(data =>
+                {
+#if DEBUG
+                    NetworkFeedback.SendFeedback("RECEIVING ALL PEER DATA", NetworkFeedback.FeedbackType.Info);
+#endif
+                    File.WriteAllBytes(Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).FullPath, data.ToArray());
+                });
             });
         };
 #if DEBUG
@@ -133,23 +148,27 @@ public class Node
         var peer = Peer.From(ClientUtils.GetSelfIP());
         foreach (var connection in connections)
         {
-            connection.SendData((_peer, client, stream) =>
+            connection.SendData((_peer) =>
             {
                 Blockchain.GetMemData<PeerData>(BlockchainMemDataGenerals.PeerDataName).RemovePeer(peer);
-
-                stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
-
-                // Remove Code
-                stream.WriteByte(0);
-
-                stream.WriteByte(peer.A);
-                stream.WriteByte(peer.B);
-                stream.WriteByte(peer.C);
-                stream.WriteByte(peer.D);
 
 #if DEBUG
                 NetworkFeedback.SendFeedback($"REMOVING IP FROM {connection.Peer}", NetworkFeedback.FeedbackType.Info);
 #endif
+
+                return new PeerSendDataBuilder(new SpanStream(6)
+                    // Type
+                    .WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate)
+
+                    // Code to remove
+                    .WriteByte(0)
+
+                    // Peer
+                    .WriteByte(peer.A)
+                    .WriteByte(peer.B)
+                    .WriteByte(peer.C)
+                    .WriteByte(peer.D))
+                .AsData();
             });
         }
 #if DEBUG
@@ -158,6 +177,26 @@ public class Node
     }
     async void Run()
     {
+        // Bind Peers
+        foreach (var peer in connections)
+        {
+            if (peer.Net != null)
+            {
+                peer.Net.OnReceiveData += (header, data, isRequest, sender, _peer) =>
+{
+                    //Span<byte> buffer = stackalloc byte[size - /* request type */ 1];
+                    using var stream = new SpanStream(data);
+                    byte requestType = (byte)stream.ReadByte();
+                    //stream.Read(buffer);
+
+                    if (peerProcessors.TryGetValue(requestType, out var processor))
+                        processor.Processor(header, stream, peer, sender);
+                    else
+                        throw new Exception($"Cannot find request processor of type {requestType}: Your version is probably different from of that peer");
+                };
+            }
+        }
+
         while(true)
         {
             foreach (var peer in connections)
@@ -178,11 +217,11 @@ public class Node
                 return;
         }
     }
-    async void RunPeer(PeerConnection peer)
+    void RunPeer(PeerConnection peer)
     {
-        if (peer == null || peer.Client == null || peer.Listener == null) return;
-        // Read incoming peer data
-        var listener = peer.Listener;
+        if (peer == null || peer.Net != null) return;
+        // Read incoming peer data (deprecated)
+/*        var listener = peer.Listener;
         if(listener.Pending())
         {
         begin:
@@ -197,19 +236,35 @@ public class Node
 
             if (listener.Pending())
                 goto begin;
-        }
+        }*/
+
+        var net = peer.Net;
+
+        net.Update();
 
         // Write pending peer data
-        var stream = peer.Client.GetStream();
+        //var stream = peer.Client.GetStream();
         while(peer.Pending.Count > 0)
         {
+            //using var stream = new SpanStream();
             var pending = peer.Pending.Dequeue();
-            pending(peer, peer.Client, stream);
+
+            var builder = pending(peer);
+
+            var data = builder.Finish(out var header);
+
+            peer.Net.SendData(header, data);
+
+            if(header.Type == TcpPeer.MessageType.Request)
+            {
+                var response = peer.Net.WaitForResponse();
+                builder.Response(response.AsSpan());
+            }
         }
     }
-    void processRequestData(NetworkStream stream, int size, PeerConnection connection, TcpClient client)
+/*    void processRequestData(NetworkStream stream, int size, PeerConnection connection, TcpClient client)
     {
-        Span<byte> buffer = stackalloc byte[size - /* request type */ 1];
+        Span<byte> buffer = stackalloc byte[size - *//* request type *//* 1];
         byte requestType = (byte)stream.ReadByte();
         stream.Read(buffer);
 
@@ -217,13 +272,13 @@ public class Node
             processor.Processor(buffer, connection, client);
         else
             throw new Exception($"Cannot find request processor of type {requestType}: Your version is probably different from of that peer");
-/*        foreach(var processor in peerProcessors)
+*//*        foreach(var processor in peerProcessors)
         {
             bool result = processor.Processor(buffer);
             if (result && processor.Exclusive)
                 break;
-        }*/
-    }
+        }*//*
+    }*/
 
     public Node()
     {
@@ -239,4 +294,4 @@ public class Node
 /// <param name="Processor">The processor method to process incoming data from peers</param>
 /// <param name="Type">The request type of this processor (a processor can only have one and there are only <see cref="NetworkGenerals.MaxRequestTypes"/> request types disponible to be claimed)</param>
 public readonly record struct PeerDataProcessor(string Id, ProcessPeerDataMethod Processor, byte Type);
-public delegate bool ProcessPeerDataMethod(Span<byte> receivedData, PeerConnection fromPeer, TcpClient fromClient);
+public delegate bool ProcessPeerDataMethod(TcpPeer.Header receivedHeader, SpanStream receivedData, PeerConnection fromPeer, TcpClient fromClient);

@@ -9,15 +9,15 @@ public class FeedPeerDataAndPropagateProcessor : PeerRequestProcessor
 
     public override byte RequestType => (byte)CoreRequestTypes.FeedPeerDataAndPropagate;
 
-    public override bool Process(Span<byte> receivedData, PeerConnection fromPeer, TcpClient fromClient)
+    public override bool Process(TcpPeer.Header receivedHeader, SpanStream receivedData, PeerConnection fromPeer, TcpClient fromClient)
     {
-        byte removeOrAdd = receivedData[0];
+        byte removeOrAdd = receivedData.ReadByte();
 
         Peer peer;
-        peer.A = receivedData[1];
-        peer.B = receivedData[2];
-        peer.C = receivedData[3];
-        peer.D = receivedData[4];
+        peer.A = receivedData.ReadByte();
+        peer.B = receivedData.ReadByte();
+        peer.C = receivedData.ReadByte();
+        peer.D = receivedData.ReadByte();
 
 #if DEBUG
         NetworkFeedback.SendFeedback($"FEEDING PEER DATA ({(removeOrAdd == 1? "Adding" : "Removing")})  WITH {peer}", NetworkFeedback.FeedbackType.Info);
@@ -40,21 +40,24 @@ public class FeedPeerDataAndPropagateProcessor : PeerRequestProcessor
         foreach(var cPeer in Node.Self.AllPeers())
         {
             // Propagate this process into connected peers
-            cPeer.SendData((_peer, client, stream) =>
+            cPeer.SendData(peer =>
             {
-                stream.WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate);
-
-                // Remove Code
-                stream.WriteByte(0);
-
-                stream.WriteByte(peer.A);
-                stream.WriteByte(peer.B);
-                stream.WriteByte(peer.C);
-                stream.WriteByte(peer.D);
-
 #if DEBUG
                 NetworkFeedback.SendFeedback($"PROPAGATING PEER DATA TO: {cPeer.Peer}", NetworkFeedback.FeedbackType.Info);
 #endif
+                return new PeerSendDataBuilder(new SpanStream(6)
+                    // Type
+                    .WriteByte((byte)CoreRequestTypes.FeedPeerDataAndPropagate)
+
+                    // Remove or Add Code
+                    .WriteByte(removeOrAdd)
+
+                    // IP
+                    .WriteByte(fromPeer.Peer.A)
+                    .WriteByte(fromPeer.Peer.B)
+                    .WriteByte(fromPeer.Peer.C)
+                    .WriteByte(fromPeer.Peer.D))
+                .AsData();
             });
         }
 

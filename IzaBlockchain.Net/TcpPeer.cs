@@ -104,7 +104,7 @@ public class TcpPeer
             //    Thread.Sleep(1);
         }
 
-        OnReceiveData?.Invoke(buffer.Slice(1 + sizeof(short)), isRequest, sender, this);
+        OnReceiveData?.Invoke(new Header { Type = (MessageType)messageType, Id = id }, buffer.Slice(1 + sizeof(short)), isRequest, sender, this);
     }
 
     //NetworkStream waitingResponse;
@@ -169,6 +169,15 @@ public class TcpPeer
         public readonly byte* ResponsePtr;
         readonly bool malloc;
 
+        public unsafe Span<byte> AsSpan()
+        {
+            byte* spanPtr = stackalloc byte[Data.Length];
+            Span<byte> span = new Span<byte>(spanPtr, Data.Length);
+            Data.CopyTo(span);
+
+            return span;
+        }
+
         /// <summary>
         /// Should be called when Response use is ended to ensure memory freeing in case of allocations
         /// </summary>
@@ -223,5 +232,5 @@ public class TcpPeer
     /// <param name="isRequest">It is this received message a request?</param>
     /// <param name="sender">The client who sent this message/data</param>
     /// <param name="peer">The peer who triggered this event</param>
-    public delegate void OnReceiveDataMethod(Span<byte> data, bool isRequest, TcpClient sender, TcpPeer peer);
+    public delegate void OnReceiveDataMethod(Header header, Span<byte> data, bool isRequest, TcpClient sender, TcpPeer peer);
 }
