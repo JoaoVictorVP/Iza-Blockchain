@@ -3,6 +3,8 @@ using IzaBlockchain.Net;
 using Newtonsoft.Json;
 using System.Buffers.Binary;
 using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Text;
@@ -56,6 +58,122 @@ Console.WriteLine($"Deserialized wallet equals to owned: {wallet.IsEqual(walletO
 Blockchain.Local.SetData("Name", "Michael");
 
 Console.WriteLine("Data got from LocalData: " + Blockchain.Local.GetData("Name"));
+
+
+// RPC Try
+Console.Write("Client or Server?\n> ");
+string command = Console.ReadLine();
+
+switch(command)
+{
+    case "Client":
+        client();
+        break;
+    case "Server":
+        server();
+        break;
+}
+
+void client()
+{
+    Console.Write("Server IP\n> ");
+    string ip = Console.ReadLine();
+    //var client = new TcpClient(ip, 8080);
+
+/*    new Timer(p =>
+    {
+        if (!client.Connected)
+            client.Connect(ip, 8080);
+    }, null, 0, 50);*/
+
+    while(true)
+    {
+        var client = new TcpClient(ip, 8080);
+        Console.Write("Send Message To Server\n> ");
+        string message = Console.ReadLine();
+        byte[] buffer = Encoding.Unicode.GetBytes(message);
+
+        var stream = client.GetStream();
+        stream.Write(buffer);
+        
+
+        Console.WriteLine("Message Sent");
+
+        if(message.Contains('?'))
+        {
+            Console.WriteLine("Waiting for response...");
+            while(!stream.DataAvailable)
+                Thread.Sleep(10);
+            Span<byte> loadBuffer = stackalloc byte[client.Available];
+            stream.Read(loadBuffer);
+            string response = Encoding.Unicode.GetString(loadBuffer);
+
+            Console.WriteLine("Response: " + response);
+        }
+
+        Console.WriteLine();
+
+        Console.ReadKey();
+    }
+}
+void server()
+{
+    var rpc = new RPCServer();
+    rpc.Run();
+}
+
+public class RPCServer
+{
+    TcpListener server;
+    public void Run()
+    {
+        var ip = ClientUtils.GetSelfIP();
+        server = new TcpListener(ip, 8080);
+        server.Start();
+
+        Console.WriteLine("Server Started At: " + ip);
+
+        Loop();
+    }
+    void Loop()
+    {
+        while (true)
+        {
+            if(server.Pending())
+            {
+                using var client = server.AcceptTcpClient();
+                ProcessClient(client);
+            }
+
+            Thread.Sleep(300);
+        }
+    }
+    void ProcessClient(TcpClient client)
+    {
+        //if (size == 0)
+         //   return;
+        var stream = client.GetStream();
+
+        while(!stream.DataAvailable)
+            Thread.Sleep(10);
+
+        Span<byte> buffer = stackalloc byte[client.Available];
+
+        stream.Read(buffer);
+
+        string message = Encoding.Unicode.GetString(buffer);
+
+        Console.WriteLine($"Received Data From: ({client.Client.LocalEndPoint}), Data: " + message);
+
+        if(message.Contains('?'))
+        {
+            Console.Write("\n> ");
+            string response = Console.ReadLine();
+            stream.Write(Encoding.Unicode.GetBytes(response));
+        }
+    }
+}
+
 
 /*while (true)
 {

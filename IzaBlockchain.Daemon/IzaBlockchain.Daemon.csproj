@@ -1,23 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-IzaBlockchain.Daemon-44E32AD6-51E3-40ED-9FC0-9D5A4FE69548</UserSecretsId>
+    <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IzaBlockchain.Daemon\IzaBlockchain.Daemon.csproj" />
     <ProjectReference Include="..\IzaBlockchain.Final\IzaBlockchain.Final.csproj" />
     <ProjectReference Include="..\IzaBlockchain.Net\IzaBlockchain.Net.csproj" />
     <ProjectReference Include="..\IzaBlockchain\IzaBlockchain.csproj" />
     <ProjectReference Include="..\ZeroKnowledgeNipah\ZeroKnowledgeNipah.csproj" />
   </ItemGroup>
-
 </Project>
