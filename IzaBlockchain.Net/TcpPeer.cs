@@ -36,20 +36,26 @@ public class TcpPeer
     /// </summary>
     public void Connect()
     {
-        server.Start();
+        if(!onlyClient) server.Start();
     }
     /// <summary>
     /// Disconnects TcpPeer
     /// </summary>
     public void Disconnect()
     {
-        server.Stop();
-        client.Close();
-        client.Dispose();
+        if(!onlyClient) server.Stop();
+        if (!onlyServer)
+        {
+            client.Close();
+            client.Dispose();
+        }
     }
 
     public void EnsureClient()
     {
+        if (onlyServer)
+            return;
+
         if (!client.Connected)
             client = new TcpClient(ip);
     }
@@ -57,6 +63,7 @@ public class TcpPeer
     public unsafe void Update()
     {
         // Received some data (server-side)
+        if (onlyClient) return;
         if(server.Pending())
         {
             // The peer wich connected to this server (probably is the same as 'client' as port is different for each peer, but no guarantee on that)
@@ -68,7 +75,7 @@ public class TcpPeer
             while (!stream.DataAvailable)
                 Thread.Sleep(10);
 
-            int size = client.Available;
+            int size = connection.Available;
 
             // If size of data is bellow 1024 bytes we do use a stackalloc, fast and reliable, and if it is above of this size then we allocate memory with new .NET 6.0 malloc implementation for a faster and unmanaged memory handling
             byte* bufferPtr = null;
@@ -152,7 +159,7 @@ public class TcpPeer
         while (client.Available == 0)
             Thread.Sleep(0);
         int size = client.Available;
-
+        
         byte* bufferPtr = null;
         Span<byte> buffer = size < 1024 ? stackalloc byte[size] : new Span<byte>(bufferPtr = (byte*)NativeMemory.Alloc((nuint)size), size);
 
@@ -181,7 +188,7 @@ public class TcpPeer
         /// <summary>
         /// Should be called when Response use is ended to ensure memory freeing in case of allocations
         /// </summary>
-        public void Release()
+        public void Dispose()
         {
             if (malloc)
                 NativeMemory.Free(ResponsePtr);
@@ -197,11 +204,18 @@ public class TcpPeer
     #endregion
 
 
-    public TcpPeer(IPAddress ip, int port)
+    bool onlyServer, onlyClient;
+    public TcpPeer(IPAddress ip, int port, bool onlyServer = false, bool onlyClient = false)
     {
         this.ip = new IPEndPoint(ip, port);
-        client = new TcpClient(this.ip);
-        server = new TcpListener(ClientUtils.GetSelfIP(), port);
+        if(!onlyServer)
+            client = new TcpClient(this.ip);
+        if(!onlyClient)
+            server = new TcpListener(ClientUtils.GetSelfIP(), port);
+
+        this.onlyServer = onlyServer;
+
+        this.onlyClient = onlyClient;
     }
 
     public struct Header

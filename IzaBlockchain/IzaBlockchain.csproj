@@ -17,4 +17,8 @@
     <Folder Include="MemDatas\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Mii.NET\Mii.NET.csproj" />
+  </ItemGroup>
+
 </Project>

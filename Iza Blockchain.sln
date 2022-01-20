@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IzaBlockchain.Net", "IzaBlo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IzaBlockchain.Final", "IzaBlockchain.Final\IzaBlockchain.Final.csproj", "{D43B4A6B-1BC3-4537-AFC2-F7A0D3E146F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IzaBlockchain.Daemon", "IzaBlockchain.Daemon\IzaBlockchain.Daemon.csproj", "{2185F96D-F569-4176-B1E5-C27FEA74AAFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IzaBlockchain.Daemon", "IzaBlockchain.Daemon\IzaBlockchain.Daemon.csproj", "{2185F96D-F569-4176-B1E5-C27FEA74AAFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mii.NET", "Mii.NET\Mii.NET.csproj", "{9B617287-89E8-4419-A94D-BE9FF6EFE33D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{2185F96D-F569-4176-B1E5-C27FEA74AAFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2185F96D-F569-4176-B1E5-C27FEA74AAFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2185F96D-F569-4176-B1E5-C27FEA74AAFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B617287-89E8-4419-A94D-BE9FF6EFE33D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B617287-89E8-4419-A94D-BE9FF6EFE33D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B617287-89E8-4419-A94D-BE9FF6EFE33D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B617287-89E8-4419-A94D-BE9FF6EFE33D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

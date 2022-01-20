@@ -55,13 +55,28 @@ walletObj = Wallet.Deserialize(json, "Testing");
 
 Console.WriteLine($"Deserialized wallet equals to owned: {wallet.IsEqual(walletObj.PrivateAddress)}");
 
-Blockchain.Local.SetData("Name", "Michael");
+//Blockchain.Local.SetData("Name", "Michael");
 
 Console.WriteLine("Data got from LocalData: " + Blockchain.Local.GetData("Name"));
 
+int difficulty = 2;
+unsafe
+{
+    while (true)
+    {
+        var hash = MiningUtils.GetHashToMine(new Span<byte>(sign.data, BlockchainGenerals.SignatureSize), difficulty, false);
+        Console.WriteLine("Start mining 0f: " + Convert.ToHexString(hash));
+        int nonce = MiningUtils.Mine(hash, difficulty);
+        Console.WriteLine("Mined with nonce: " + nonce);
+        bool valid = MiningUtils.TryNonce(hash, nonce, difficulty);
+        Console.WriteLine("Finished mining with validity: " + valid);
+    }
+}
+
+
 
 // RPC Try
-Console.Write("Client or Server?\n> ");
+/*Console.Write("Client or Server?\n> ");
 string command = Console.ReadLine();
 
 switch(command)
@@ -72,29 +87,33 @@ switch(command)
     case "Server":
         server();
         break;
-}
+}*/
 
-void client()
+/*void client()
 {
     Console.Write("Server IP\n> ");
     string ip = Console.ReadLine();
+    var peer = new TcpPeer(IPAddress.Parse(ip), 8080, false, true);
+
+    peer.Connect();
     //var client = new TcpClient(ip, 8080);
 
-/*    new Timer(p =>
+*//*    new Timer(p =>
     {
         if (!client.Connected)
             client.Connect(ip, 8080);
-    }, null, 0, 50);*/
+    }, null, 0, 50);*//*
 
     while(true)
     {
-        var client = new TcpClient(ip, 8080);
+        //var client = new TcpClient(ip, 8080);
         Console.Write("Send Message To Server\n> ");
         string message = Console.ReadLine();
         byte[] buffer = Encoding.Unicode.GetBytes(message);
 
-        var stream = client.GetStream();
-        stream.Write(buffer);
+        peer.SendData(TcpPeer.Header.Request(), buffer);
+        //var stream = client.GetStream();
+        //stream.Write(buffer);
         
 
         Console.WriteLine("Message Sent");
@@ -102,11 +121,13 @@ void client()
         if(message.Contains('?'))
         {
             Console.WriteLine("Waiting for response...");
-            while(!stream.DataAvailable)
-                Thread.Sleep(10);
-            Span<byte> loadBuffer = stackalloc byte[client.Available];
-            stream.Read(loadBuffer);
-            string response = Encoding.Unicode.GetString(loadBuffer);
+            using var responseResult = peer.WaitForResponse();
+            //while(!stream.DataAvailable)
+            //    Thread.Sleep(10);
+            //Span<byte> loadBuffer = stackalloc byte[client.Available];
+            //stream.Read(loadBuffer);
+
+            string response = Encoding.Unicode.GetString(responseResult.Data);
 
             Console.WriteLine("Response: " + response);
         }
@@ -124,12 +145,12 @@ void server()
 
 public class RPCServer
 {
-    TcpListener server;
+    TcpPeer peer;
     public void Run()
     {
         var ip = ClientUtils.GetSelfIP();
-        server = new TcpListener(ip, 8080);
-        server.Start();
+        peer = new TcpPeer(ip, 8080, true);
+        peer.Connect();
 
         Console.WriteLine("Server Started At: " + ip);
 
@@ -137,13 +158,26 @@ public class RPCServer
     }
     void Loop()
     {
+        peer.OnReceiveData += (header, data, isRequest, sender, peer) =>
+        {
+            string message = Encoding.Unicode.GetString(data);
+            Console.WriteLine($"Message from ({(sender.Client.LocalEndPoint as IPEndPoint).Address}: {message}");
+
+            if(header.Type == TcpPeer.MessageType.Request)
+            {
+                Console.Write("> ");
+                string response = Console.ReadLine();
+                Span<byte> responseBytes = stackalloc byte[Encoding.Unicode.GetByteCount(response)];
+                
+                Encoding.Unicode.GetBytes(response, responseBytes);
+
+                peer.SendResponse(responseBytes, header.Id);
+            }
+        };
+
         while (true)
         {
-            if(server.Pending())
-            {
-                using var client = server.AcceptTcpClient();
-                ProcessClient(client);
-            }
+            peer.Update();
 
             Thread.Sleep(300);
         }
@@ -172,7 +206,7 @@ public class RPCServer
             stream.Write(Encoding.Unicode.GetBytes(response));
         }
     }
-}
+}*/
 
 
 /*while (true)
@@ -186,33 +220,33 @@ public class RPCServer
     Console.WriteLine("Signature: " + signature);
 }*/
 
-/*Console.WriteLine("Mining Test");
+Console.WriteLine("Mining Test");
 // Mining Algorithm Test
 var miner = new Miner();
 
-int difficulty = 1;
+int difficultyX = 1;
 int calls = 0;
 while (true)
 {
-    var hash = miner.InitBlock(difficulty);
-    Console.WriteLine($"Hash to be worked (difficulty {difficulty}: {Convert.ToHexString(hash)}");
+    var hash = miner.InitBlock(difficultyX);
+    Console.WriteLine($"Hash to be worked (difficulty {difficultyX}: {Convert.ToHexString(hash)}");
     var watch = new Stopwatch();
     watch.Start();
-    int nonce = miner.Mine(hash, difficulty);
+    int nonce = miner.Mine(hash, difficultyX);
     watch.Stop();
 
     Console.WriteLine($"Block minned in {watch.Elapsed} with nonce {nonce}");
 
     calls++;
 
-    if(calls > 100)
+    if (calls > 100)
     {
-        difficulty++;
+        difficultyX++;
         calls = 0;
     }
-}*/
+}
 
-/*public class Miner
+public class Miner
 {
     public Span<byte> InitBlock(int difficulty)
     {
@@ -224,11 +258,11 @@ while (true)
     }
     public int Mine(Span<byte> hash, int difficulty)
     {
-*//*        Span<byte> subhash = hash.Slice(0, difficulty);
+        Span<byte> subhash = hash.Slice(0, difficulty);
         Span<byte> tryHash = stackalloc byte[32];
         Span<byte> checkNonce = stackalloc byte[4];
 
-        for (int nonce = 0; nonce < int.MaxValue; nonce++)
+/*        for (int nonce = 0; nonce < int.MaxValue; nonce++)
         {
             BinaryPrimitives.WriteInt32LittleEndian(checkNonce, nonce);
             SHA256.HashData(checkNonce, tryHash);
@@ -236,7 +270,7 @@ while (true)
 
             if (subtryHash.SequenceEqual(subhash))
                 return nonce;
-        }*//*
+        }*/
 
         bool worked = false;
         int result = -1;
@@ -251,7 +285,7 @@ while (true)
             Span<byte> subhash = hash.Slice(0, difficulty);
             Span<byte> tryHash = stackalloc byte[32];
             Span<byte> checkNonce = stackalloc byte[4];
-            for(int nonce = 0; nonce < middle; nonce++)
+            for (int nonce = 0; nonce < middle; nonce++)
             {
                 BinaryPrimitives.WriteInt32LittleEndian(checkNonce, nonce);
                 SHA256.HashData(checkNonce, tryHash);
@@ -272,7 +306,7 @@ while (true)
             Span<byte> subhash = hash.Slice(0, difficulty);
             Span<byte> tryHash = stackalloc byte[32];
             Span<byte> checkNonce = stackalloc byte[4];
-            for(int nonce = middle; nonce < middle * 2; nonce++)
+            for (int nonce = middle; nonce < middle * 2; nonce++)
             {
                 BinaryPrimitives.WriteInt32LittleEndian(checkNonce, nonce);
                 SHA256.HashData(checkNonce, tryHash);
@@ -290,33 +324,33 @@ while (true)
         ta.Start();
         tb.Start();
 
-        while(!worked)
+        while (!worked)
         {
 
         }
 
-        *//*        byte[] nhash = hash.ToArray();
-                bool worked = false;
-                var result = Parallel.For(0, int.MaxValue, (nonce, state) =>
-                {
-                    Span<byte> hash = nhash;
-                    Span<byte> subhash = hash.Slice(0, difficulty);
-                    Span<byte> tryHash = stackalloc byte[32];
-                    Span<byte> checkNonce = stackalloc byte[4];
-                    BinaryPrimitives.WriteInt32LittleEndian(checkNonce, nonce);
-                    SHA256.HashData(checkNonce, tryHash);
-                    var subtryHash = tryHash.Slice(0, difficulty);
+/*        byte[] nhash = hash.ToArray();
+        bool worked = false;
+        var result = Parallel.For(0, int.MaxValue, (nonce, state) =>
+        {
+            Span<byte> hash = nhash;
+            Span<byte> subhash = hash.Slice(0, difficulty);
+            Span<byte> tryHash = stackalloc byte[32];
+            Span<byte> checkNonce = stackalloc byte[4];
+            BinaryPrimitives.WriteInt32LittleEndian(checkNonce, nonce);
+            SHA256.HashData(checkNonce, tryHash);
+            var subtryHash = tryHash.Slice(0, difficulty);
 
-                    if (subtryHash.SequenceEqual(subhash))
-                    {
-                        worked = true;
-                        state.Break();
-                    }
-                });
+            if (subtryHash.SequenceEqual(subhash))
+            {
+                worked = true;
+                state.Break();
+            }
+        });
 
-                if (worked)
-                    return (int)result.LowestBreakIteration;*//*
+        if (worked)
+            return (int)result.LowestBreakIteration;*/
 
         return result;
     }
-}*/
+}

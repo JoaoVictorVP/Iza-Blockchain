@@ -20,8 +20,8 @@ namespace IzaBlockchain
         protected void InitializeDB()
         {
             // Temp mod on db
-            //db = new LiteDatabase(new MemoryStream(File.ReadAllBytes(FullPath)));
-            db = new LiteDatabase(FullPath);
+            db = new LiteDatabase(new MemoryStream(File.ReadAllBytes(FullPath)));
+            //db = new LiteDatabase(FullPath);
         }
         public virtual void End()
         {
