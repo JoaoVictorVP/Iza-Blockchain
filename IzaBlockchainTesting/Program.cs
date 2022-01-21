@@ -1,5 +1,6 @@
 ﻿using IzaBlockchain;
 using IzaBlockchain.Net;
+using Mii.NET;
 using Newtonsoft.Json;
 using System.Buffers.Binary;
 using System.Diagnostics;
@@ -42,6 +43,13 @@ var mask = ZKNipah.GetMask(wallet, new TimeStamp(new DateTime(3, 3, 3, 3, 3, 3, 
 
 var verifyThird = ZKNipah.ThirdSignExternal(ref sign, ref mask);
 
+
+Hash256 h1 = publicAddress.ToHash256();
+
+Console.WriteLine("Hash: " + $"0x{h1}");
+
+
+
 Console.WriteLine($"Provided: {third}\nVerifying: {verifyThird}\nIs Equal: {verifyThird.IsEqual(third)}");
 ClientUtils.GetSelfIP();
 
@@ -57,16 +65,56 @@ Console.WriteLine($"Deserialized wallet equals to owned: {wallet.IsEqual(walletO
 
 //Blockchain.Local.SetData("Name", "Michael");
 
+JsonSerializerSettings sets = null;
+JsonConvert.DefaultSettings = () =>
+{
+    if (sets == null) sets = new JsonSerializerSettings();
+    sets.Formatting = Formatting.Indented;
+    return sets;
+};
+
 Console.WriteLine("Data got from LocalData: " + Blockchain.Local.GetData("Name"));
 
-int difficulty = 2;
+List<int> allCollisions = new List<int>(320);
+List<int> collisions = new List<int>(30);
+HashSet<int> nonces = new HashSet<int>(32);
+int colls = 0;
+int lastSizeNonces = 0;
+
+int difficulty = 1;
 unsafe
 {
     while (true)
     {
-        var hash = MiningUtils.GetHashToMine(new Span<byte>(sign.data, BlockchainGenerals.SignatureSize), difficulty, false);
-        Console.WriteLine("Start mining 0f: " + Convert.ToHexString(hash));
+        using var hash = MiningUtils.GetHashToMine(new Span<byte>(sign.data, BlockchainGenerals.SignatureSize), difficulty, false);
+        Console.WriteLine("Start mining of: " + Convert.ToHexString(hash));
         int nonce = MiningUtils.Mine(hash, difficulty);
+        if (nonces.Contains(nonce))
+        {
+            int difference = (nonces.Count + 1) - lastSizeNonces;
+
+            lastSizeNonces = nonces.Count + 1;
+
+            allCollisions.Add(difference);
+
+            collisions.Add(difference);
+
+            colls++;
+            if(colls > 30)
+            {
+                double average = collisions.Average();
+                Console.WriteLine($"Medium hashes-peer-nonce collisions in difficulty (3) are " + average);
+                File.WriteAllText($"average-collisions-{difficulty} ({average}).json", JsonConvert.SerializeObject(collisions));
+
+                collisions.Clear();
+
+                difficulty++;
+                colls = 0;
+
+                File.WriteAllText($"Average-Collisions-All (until difficulty {difficulty}).json", JsonConvert.SerializeObject(allCollisions));
+            }
+        }
+        nonces.Add(nonce);
         Console.WriteLine("Mined with nonce: " + nonce);
         bool valid = MiningUtils.TryNonce(hash, nonce, difficulty);
         Console.WriteLine("Finished mining with validity: " + valid);

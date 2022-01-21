@@ -1,4 +1,5 @@
-﻿using System.Buffers.Binary;
+﻿using IzaBlockchain.Net;
+using System.Buffers.Binary;
 
 namespace IzaBlockchain
 {
@@ -11,7 +12,7 @@ namespace IzaBlockchain
         /// </summary>
         public int dataSize => header.size - BlockHeader.HeaderByteCount;*/
 
-        public readonly byte[] data;
+        public readonly NativeArray<byte> data;
 
         public static Block Create(BlockHash previousBlockHash, Address contract, Signature sender_signature, Signature validator_signature, byte[] data)
         {
@@ -48,10 +49,16 @@ namespace IzaBlockchain
             return nextBlock.VerifyPreviousChainBlock(this);
         }
 
+        public Block(BlockHeader header, Span<byte> data)
+        {
+            this.header = header;
+            this.data = new NativeArray<byte>(data);
+        }
+
         public Block(BlockHeader header, byte[] data)
         {
             this.header = header;
-            this.data = data;
+            this.data = new NativeArray<byte>(data);
         }
 
         public override string ToString() => header.ToString();

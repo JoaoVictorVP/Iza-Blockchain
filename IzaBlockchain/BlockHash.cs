@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using IzaBlockchain.Net;
+using Mii.NET;
+using System.Security.Cryptography;
 
 namespace IzaBlockchain
 {
@@ -6,6 +8,11 @@ namespace IzaBlockchain
     {
         public fixed byte hash[BlockchainGenerals.BlockHashSize];
 
+        public Hash512 ToHash512()
+        {
+            fixed (byte* ptr = hash)
+                return new Hash512(new Span<byte>(ptr, BlockchainGenerals.BlockHashSize));
+        }
         public BlockHash(Span<byte> span_data)
         {
             for (int i = 0; i < BlockchainGenerals.BlockHashSize; i++)
@@ -47,12 +54,13 @@ namespace IzaBlockchain
 
             return GetBlockHash(block.header, block.data);
         }
-        public static unsafe BlockHash GetBlockHash(BlockHeader blockHeader, byte[] blockData)
+        public static unsafe BlockHash GetBlockHash(BlockHeader blockHeader, NativeArray<byte> blockData)
         {
             int headerSize = BlockHeader.HeaderByteCount - /* exclude self hash */ BlockchainGenerals.BlockHashSize;
             var header = blockHeader.GetBytes().Span;
             int dataSize = blockHeader.size;
-            var data = new Memory<byte>(blockData).Span;
+            //var data = new Memory<byte>(blockData).Span;
+            Span<byte> data = blockData;
 
             Span<byte> data_header = stackalloc byte[headerSize + dataSize];
             for (int i = 0; i < headerSize; i++)

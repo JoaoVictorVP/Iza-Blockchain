@@ -17,4 +17,16 @@ public static class MiiUtils
         else
             return new NativeArray<byte>(size).SmartClean();
     }
+    public static bool FromHexString(ReadOnlySpan<char> chars, Span<byte> bytes)
+    {
+        if (chars.Length == 0)
+            return false;
+        if ((uint)chars.Length % 2 != 0)
+            throw new FormatException("Invalid Hex Format");
+
+        if (!HexUtils.TryDecodeFromUtf16(chars, bytes, out _))
+            throw new FormatException("Invalid Hex Format");
+
+        return true;
+    }
 }

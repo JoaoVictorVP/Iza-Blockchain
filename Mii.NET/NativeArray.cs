@@ -2,10 +2,14 @@
 
 namespace IzaBlockchain.Net;
 
-public unsafe struct NativeArray<T> where T : unmanaged
+public unsafe struct NativeArray<T> : IDisposable where T : unmanaged
 {
+    public bool IsNull => ptr == null;
+
     public readonly int Size;
     T* ptr;
+
+    public ref T Ref(int index) => ref ptr[index];
 
     public T this[int index]
     {
