@@ -10,6 +10,10 @@ public static class BlockchainGenerals
         
     public const int BlockHashSize = 64;
 
+    public const int TransactionSize = sizeof(decimal) + AddressSize;
+
+    public const int SignedTransactionSize = SignatureSize + AddressSize + TransactionSize;
+
     /// <summary>
     /// Main connection port to network, starts with 30000 and can go through until 30500
     /// </summary>

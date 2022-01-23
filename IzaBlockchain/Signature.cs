@@ -30,6 +30,11 @@
             return true;
         }
 
+        public void GetBytes(Span<byte> bytes)
+        {
+            for(int i = 0; i < BlockchainGenerals.SignatureSize; i++)
+                bytes[i] = data[i];
+        }
         public override string ToString()
         {
             fixed (byte* ptr = data)

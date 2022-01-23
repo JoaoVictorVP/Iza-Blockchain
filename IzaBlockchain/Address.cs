@@ -1,5 +1,6 @@
 ﻿using Mii.NET;
 using Newtonsoft.Json;
+using System.Runtime.InteropServices;
 
 namespace IzaBlockchain;
 
@@ -7,6 +8,12 @@ namespace IzaBlockchain;
 public unsafe struct Address
 {
     public fixed byte data[BlockchainGenerals.AddressSize];
+
+    public void GetBytes(Span<byte> bytes)
+    {
+        for (int i = 0; i < BlockchainGenerals.AddressSize; i++)
+            bytes[i] = data[i];
+    }
 
     public Hash256 ToHash256()
     {
